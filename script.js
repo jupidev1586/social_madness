@@ -1,4 +1,4 @@
-import { q, c, createFriendEl, createMessageEl } from './utils.js';
+import { q, createFriendEl, createMessageEl } from './utils.js';
 import { GET, POST, DELETE } from './api.js';
 
 const messageBodyPost = {};
@@ -22,9 +22,18 @@ GET('https://edgemony-backend.herokuapp.com/friends').then((friendList) => {
 })
 
 // Messages
-GET('https://edgemony-backend.herokuapp.com/messages').then((messagesList) => {
-  messagesList.reverse().map(({text, sender, date}) => createMessageEl(messagesListEl, text, sender, date)) 
+GET('https://edgemony-backend.herokuapp.com/messages')
+.then((messagesList) => {
+  messagesList.reverse().map(({text, sender, date, id}) => createMessageEl(messagesListEl, id, text, sender, date, () => {
+    DELETE('https://edgemony-backend.herokuapp.com/messages', id).then(() => location.reload())
+  })) // Questo è identico a quello che succede in riga 11
 })
+// .then(() => messagesListEl.childNodes
+//   .forEach(message => message.addEventListener('click',
+//     () => DELETE('https://edgemony-backend.herokuapp.com/messages', message.id).then(() => location.reload())
+//   ))
+// )
+
 
 inputTextEl.addEventListener('input', (e) => messageBodyPost.text = e.target.value);
 
@@ -37,10 +46,9 @@ addMsgBtn.addEventListener('click', () => {
   POST('https://edgemony-backend.herokuapp.com/messages', messageBodyPost)
     .then(() => document.querySelectorAll('.messageCard').forEach(message => message.remove()))
     .then(() => GET('https://edgemony-backend.herokuapp.com/messages').then((messagesList) => {
-      messagesList.reverse().map(({text, sender, date}) => createMessageEl(messagesListEl, text, sender, date))
+      messagesList.reverse().map(({text, sender, date, id}) => createMessageEl(messagesListEl, id, text, sender, date))
     }))
 })
-
 
 const removeSerieBtnEl = q('.remove-post');
 const deleteInputEl = q('.delete');
@@ -65,7 +73,7 @@ filterInput.addEventListener('input', (e) => {
     messagesList
     .reverse()
     .filter(message => message.sender.toLowerCase().includes(e.target.value.toLowerCase()))
-    .map(({text, sender, date}) => createMessageEl(messagesListEl, text, sender, date)) // Questo è identico a quello che succede in riga 11
+    .map(({text, sender, date, id}) => createMessageEl(messagesListEl, id, text, sender, date)) // Questo è identico a quello che succede in riga 11
   })
 })
 
